@@ -37,29 +37,6 @@ void *afl_custom_init(void *afl, unsigned int seed) {
     return data; // このポインタは他の関数に渡されます
 }
 
-// // 2. カスタム変異 (Havoc Mutation)
-// // 標準の変異処理の一部として呼び出されます。ここでデータを変更します。
-// size_t afl_custom_havoc_mutation(void *data, unsigned char *buf, size_t buf_size, unsigned char **out_buf, size_t max_size) {
-//     // data: initで返した構造体
-//     // buf: 現在の入力データ
-//     // out_buf: 変異後のデータを格納するバッファへのポインタ
-
-//     // 出力バッファの確保（AFL++はrealloc等をよしなに扱ってくれない場合があるため、自身の管理バッファを使うのが一般的ですが、
-//     // ここでは簡易的にstaticバッファか、あるいは入力バッファを直接書き換える例を示します）
-    
-//     // 例: 単純にランダムな位置の1バイトを 'A' に変える
-//     if (buf_size > 0) {
-//         int pos = rand() % buf_size;
-//         buf[pos] = 'A'; 
-//     }
-
-//     // 変異したデータを指すように設定
-//     *out_buf = buf;
-    
-//     // 新しいサイズを返す
-//     return buf_size;
-// }
-
 size_t afl_custom_fuzz(void *data, u8 *buf, size_t buf_size, u8 **out_buf, 
                        u8 *add_buf, size_t add_buf_size, size_t max_size){
 
@@ -68,45 +45,62 @@ size_t afl_custom_fuzz(void *data, u8 *buf, size_t buf_size, u8 **out_buf,
 }
 
 
-// // 3. ポストプロセス (任意だが強力)
-// // AFLが変異を行った「直後」、ターゲットに送る「直前」に呼ばれます。
-// // CRCやチェックサムの修正、マジックナンバーの修復などに最適です。
-// size_t afl_custom_post_process(void *data, unsigned char *buf, size_t buf_size, unsigned char **out_buf) {
-//     // 例: 先頭4バイトを必ず "MAGIC" にする（サイズが足りれば）
-//     if (buf_size >= 5) {
-//         memcpy(buf, "MAGIC", 5);
-//     }
-    
-//     *out_buf = buf;
-//     return buf_size;
-// }
-
-// 4. クリーンアップ (必須)
+// クリーンアップ
 void afl_custom_deinit(void *data) {
     free(data);
 }
 
 void strategy_smart_insert(){
-
+/*
+設計:
+- 挿入箇所を決定
+- 挿入分だけバッファを拡張
+- 1つ前のユニットを取得。そのユニットの待機時間を最大値として挿入要素の待機時間aを乱数で決定
+- 1つ前のユニットの待機時間からaを引く。
+- 挿入箇所に要素を挿入(バッファを調整)
+*/
 }
 
 void strategy_smart_remove(){
-
+/*
+設計：
+- 削除箇所を決定
+- 1つ前のユニットを取得。そのユニットの待機時間に、削除する要素の待機時間を加算
+- 削除箇所の要素を削除(バッファを調整)
+*/
 }
 
 void strategy_force_insert(){
-
+/*
+設計:
+- 挿入箇所を決定
+- 挿入分だけバッファを拡張
+- 挿入箇所に要素を挿入(バッファを調整)
+*/
 }
 
 void strategy_force_remove(){
-
+/*
+設計：
+- 削除箇所を決定
+- 削除箇所の要素を削除(バッファを調整)
+*/
 }
 
 void strategy_swap_inputs(){
-
+/*
+設計：
+- スワップ箇所2つを決定
+- ユニットの入力を入れ替え
+*/
 }
 
 void strategy_slide_time(){
-
+/*
+設計：
+- 時間をずらす要素を決定
+- 1つ前のユニットを取得。その待機時間と、時間をずらす要素の待機時間を合算しaを算出。
+- aを最大値として乱数bを求める。bを1つ前のユニットの待機時間に代入、a-bを時間をずらす要素の待機時間に代入
+*/
 }
 

@@ -43,7 +43,7 @@ static InputMachine input_machine = {
     .afl_buf = NULL
 };
 
-void VG_new_test(size_t buf_size, char* buf){
+void TS_new_test(size_t buf_size, char* buf){
     input_machine.afl_buf_size = buf_size;
     input_machine.afl_buf = buf;
     input_machine.afl_buf_pos = 0;
@@ -86,7 +86,7 @@ static void iterate_buf(){
         input_machine.afl_buf_pos += 3;
 
         // ここで sleep_time が 0 のときは、次の 3 バイトを続けて読む
-        // > 0 のときは while 条件で抜けて VG_update() 側に制御が戻る
+        // > 0 のときは while 条件で抜けて TS_update() 側に制御が戻る
     }
 
     // バッファを使い切り、かつもう待ち時間もないならテスト終了
@@ -96,7 +96,7 @@ static void iterate_buf(){
     }
 }
 
-void VG_update(unsigned short int delta_time)
+void TS_update(unsigned short int delta_time)
 {
     if (!input_machine.test_state) return;
 
@@ -108,18 +108,22 @@ void VG_update(unsigned short int delta_time)
     iterate_buf();
 }
 
-char VG_getch() {
+char TS_getch() {
     if (input_machine.test_state) {
         return input_machine.last_key;
     }
     return 0;
 }
 
-char VG_pollinput_onebyone() {
+int  TS_pollkeyinput_onebyone(char* processing, int* is_pressed) {
     static size_t current_key_index = 0;
+    *processing = 0;
+    *is_pressed = 0;
     if (input_machine.test_state) {
         if (current_key_index < input_machine.key_count) {
-            return input_machine.keys[current_key_index++].key;
+            *processing = input_machine.keys[current_key_index].key;
+            *is_pressed = input_machine.keys[current_key_index++].is_pressed ? 1 : 0;
+            return 1;
         }
         else {
             current_key_index = 0;
@@ -132,6 +136,6 @@ char VG_pollinput_onebyone() {
     }
 }
 
-int VG_is_running() {
+int TS_is_running() {
     return input_machine.test_state ? 1 : 0;
 }

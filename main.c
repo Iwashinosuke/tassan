@@ -21,15 +21,14 @@ static size_t unit_size=3;
 // ミューテータの状態を保持する構造体
 typedef struct my_mutator {
     int seed;
-    u32 mutator_buf;
 } my_mutator_t;
 
-// 1. 初期化関数 (必須)
+// 初期化関数 (必須)
 // AFL++起動時に一度だけ呼ばれます。
 void *afl_custom_init(void *afl, unsigned int seed) {
     my_mutator_t *data = (my_mutator_t *)malloc(sizeof(my_mutator_t));
     if (!data) {
-        perror("malloc");
+        perror("[tassan]malloc error. process stopped.");
         return NULL;
     }
     data->seed = seed;
@@ -39,8 +38,6 @@ void *afl_custom_init(void *afl, unsigned int seed) {
 
 size_t afl_custom_fuzz(void *data, u8 *buf, size_t buf_size, u8 **out_buf, 
                        u8 *add_buf, size_t add_buf_size, size_t max_size){
-
-
 
 }
 

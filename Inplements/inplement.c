@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include "tassan.h"
+#include "../genkeys.h"
 
 typedef struct {
     char key;
@@ -35,21 +36,22 @@ typedef struct {
 } InputMachine;
 
 // ハンドル型として定義（呼び出し元は void* として扱う）
-typedef InputMachine* TS_Handle;
+typedef InputMachine Tassan;
 
-TS_Handle TS_create_instance() {
+Tassan* create_instance() {
     InputMachine* machine = (InputMachine*)malloc(sizeof(InputMachine));
     if (!machine) return NULL;
     
     machine->test_state = false;
-    machine->key_count = 2;
-    machine->keys = (InputKey*)malloc(sizeof(InputKey) * 2);
+    machine->key_count = TS_KEYS_COUNT;
+    machine->keys = (InputKey*)malloc(sizeof(InputKey) * TS_KEYS_COUNT);
     if (!machine->keys) {
         free(machine);
         return NULL;
     }
-    machine->keys[0] = (InputKey){ .key = 'a', .is_pressed = false };
-    machine->keys[1] = (InputKey){ .key = 'b', .is_pressed = false };
+    for(size_t i=0; i<TS_KEYS_COUNT; i++){
+        machine->keys[i] = (InputKey){ .key = TS_KEYS[i], .is_pressed = false };
+    }
     machine->sleep_time = 0;
     machine->waiting_key = 0;
     machine->last_key = 0;
@@ -58,19 +60,20 @@ TS_Handle TS_create_instance() {
     machine->afl_buf_pos = 0;
     machine->current_key_index = 0;
     
-    return (TS_Handle)machine;
+    return (Tassan*)machine;
 }
 
-void TS_destroy_instance(TS_Handle handle) {
+void TS_free(Tassan* handle) {
     if (!handle) return;
     InputMachine* machine = (InputMachine*)handle;
     free(machine->keys);
     free(machine);
 }
 
-void TS_new_test(TS_Handle handle, size_t buf_size, char* buf) {
+void TS_new_test(Tassan* handle, size_t buf_size, char* buf) {
     if (!handle) return;
     InputMachine* machine = (InputMachine*)handle;
+    machine=create_instance();
     
     machine->afl_buf_size = buf_size;
     machine->afl_buf = buf;
@@ -120,7 +123,7 @@ static void iterate_buf(InputMachine* machine) {
     }
 }
 
-void TS_update(TS_Handle handle, unsigned short int delta_time) {
+void TS_update(Tassan* handle, unsigned short int delta_time) {
     if (!handle) return;
     InputMachine* machine = (InputMachine*)handle;
     
@@ -134,7 +137,7 @@ void TS_update(TS_Handle handle, unsigned short int delta_time) {
     iterate_buf(machine);
 }
 
-char TS_getch(TS_Handle handle) {
+char TS_getch(Tassan* handle) {
     if (!handle) return 0;
     InputMachine* machine = (InputMachine*)handle;
     
@@ -144,7 +147,7 @@ char TS_getch(TS_Handle handle) {
     return 0;
 }
 
-int TS_pollkeyinput_onebyone(TS_Handle handle, char* processing, int* is_pressed) {
+int TS_pollkeyinput_onebyone(Tassan* handle, char* processing, int* is_pressed) {
     if (!handle || !processing || !is_pressed) return 0;
     InputMachine* machine = (InputMachine*)handle;
     
@@ -167,7 +170,7 @@ int TS_pollkeyinput_onebyone(TS_Handle handle, char* processing, int* is_pressed
     }
 }
 
-int TS_is_running(TS_Handle handle) {
+int TS_is_running(Tassan* handle) {
     if (!handle) return 0;
     InputMachine* machine = (InputMachine*)handle;
     return machine->test_state ? 1 : 0;

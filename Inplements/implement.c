@@ -35,10 +35,15 @@ typedef struct {
     size_t current_key_index;
 } InputMachine;
 
-// ハンドル型として定義（呼び出し元は void* として扱う）
-typedef InputMachine Tassan;
+struct Tassan {
+    InputMachine machine;
+};
 
-Tassan* create_instance() {
+/*
+    内部関数
+*/
+
+InputMachine* create_instance() {
     InputMachine* machine = (InputMachine*)malloc(sizeof(InputMachine));
     if (!machine) return NULL;
     
@@ -60,36 +65,10 @@ Tassan* create_instance() {
     machine->afl_buf_pos = 0;
     machine->current_key_index = 0;
     
-    return (Tassan*)machine;
+    return machine;
 }
 
-void TS_free(Tassan* handle) {
-    if (!handle) return;
-    InputMachine* machine = (InputMachine*)handle;
-    free(machine->keys);
-    free(machine);
-}
-
-void TS_new_test(Tassan* handle, size_t buf_size, char* buf) {
-    if (!handle) return;
-    InputMachine* machine = (InputMachine*)handle;
-    machine=create_instance();
-    
-    machine->afl_buf_size = buf_size;
-    machine->afl_buf = buf;
-    machine->afl_buf_pos = 0;
-    machine->test_state = true;
-
-    // 最初の Sleep Time を読み込む
-    const unsigned char *initial_buf =
-        (const unsigned char *)machine->afl_buf;
-    unsigned short st = (unsigned short)initial_buf[0] |
-                        ((unsigned short)initial_buf[1] << 8);
-    machine->sleep_time = (short int)st;
-    machine->afl_buf_pos += 2;
-}
-
-static void iterate_buf(InputMachine* machine) {
+void iterate_buf(InputMachine* machine) {
     // sleep_time が 0 以下 & まだ 3 バイト読めるあいだ処理を進める
     while (machine->sleep_time <= 0 &&
            machine->afl_buf_pos + 3 <= machine->afl_buf_size) {
@@ -103,14 +82,17 @@ static void iterate_buf(InputMachine* machine) {
         machine->sleep_time = (short int)st;
 
         // 対応するキーの状態を更新
-        for (size_t i = 0; i < machine->key_count; i++) {
-            InputKey *k = &machine->keys[i];
-            if (k->key == key) {
-                k->is_pressed = !k->is_pressed;
-                machine->last_key = k->is_pressed ? k->key : 0;
-                break;
+        if (key != 0){
+            for (size_t i = 0; i < machine->key_count; i++) {
+                InputKey *k = &machine->keys[i];
+                if (k->key == key) {
+                    k->is_pressed = !k->is_pressed;
+                    machine->last_key = k->is_pressed ? k->key : 0;
+                    break;
+                }
             }
         }
+
 
         machine->waiting_key = key;
         machine->afl_buf_pos += 3;
@@ -121,6 +103,26 @@ static void iterate_buf(InputMachine* machine) {
         machine->sleep_time <= 0) {
         machine->test_state = false;
     }
+}
+
+/*
+    API用関数
+*/
+
+void TS_new_test(Tassan* handle, size_t buf_size, char* buf) {
+    if (handle) TS_free(handle);
+    InputMachine* machine = NULL;
+    machine=create_instance();
+    
+    machine->afl_buf_size = buf_size;
+    machine->afl_buf = buf;
+    machine->afl_buf_pos = 0;
+    machine->test_state = true;
+
+    // 最初の Sleep Time を読み込む
+    iterate_buf(machine);
+
+    handle = (Tassan*)machine;
 }
 
 void TS_update(Tassan* handle, unsigned short int delta_time) {
@@ -174,4 +176,11 @@ int TS_is_running(Tassan* handle) {
     if (!handle) return 0;
     InputMachine* machine = (InputMachine*)handle;
     return machine->test_state ? 1 : 0;
+}
+
+void TS_free(Tassan* handle) {
+    if (!handle) return;
+    InputMachine* machine = (InputMachine*)handle;
+    free(machine->keys);
+    free(machine);
 }

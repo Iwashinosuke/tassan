@@ -12,7 +12,7 @@ CFLAGS := -O2 -g -fPIC
 LDFLAGS := -shared
 SRCS := *.c
 OBJS := $(SRCS:.c=.o)
-LIB := libtassan.so
+LIB := libtassan-mutator.so
 
 .PHONY: all clean
 

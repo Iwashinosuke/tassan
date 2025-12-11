@@ -5,7 +5,7 @@
 
 typedef struct Tassan Tassan;
 
-void TS_new_test(Tassan* handle, size_t buf_size, char* buf);
+void TS_new_test(Tassan** handle, size_t buf_size, char* buf);
 void TS_update(Tassan* handle, unsigned short int delta_time);
 char TS_getch(Tassan* handle);
 int  TS_pollkeyinput_onebyone(Tassan* handle, char* processing, int* is_pressed);

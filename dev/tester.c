@@ -1,4 +1,4 @@
-#include "../Inplements/tassan.h"
+#include "../Implements/tassan.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -32,7 +32,7 @@ int main(void) {
         return 1;
     }
 
-    TS_new_test(tassan, (size_t)size, data);
+    TS_new_test(&tassan, (size_t)size, (char*)data);
     if (tassan == NULL) {
         fprintf(stderr, "TS_new_test failed\n");
         free(data);
@@ -40,13 +40,20 @@ int main(void) {
     }
     printf("Starting test loop...\n");
 
+    char prev_key = 0;
+    size_t frame_count = 0;
     while (TS_is_running(tassan)) {
         TS_update(tassan, 16); // Simulate a frame update with delta_time = 16ms
         char key = TS_getch(tassan);
-        printf("test");
-        if (key != 0) {
-            printf("Key pressed: %c\n", key);
+        if (key != 0 && key != prev_key) {
+            printf("Current Frame: %zu Key pressed: %c\n", frame_count, key);
+            prev_key = key;
         }
+        else if (key == 0 && key != prev_key) {
+            printf("Current Frame: %zu No key pressed\n", frame_count);
+            prev_key = 0; // Reset previous key when no key is pressed
+        }
+        frame_count++;
     }
 
     printf("Test completed.\n");

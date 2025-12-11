@@ -39,10 +39,10 @@ struct Tassan {
     InputMachine machine;
 };
 
+
 /*
     内部関数
 */
-
 InputMachine* create_instance() {
     InputMachine* machine = (InputMachine*)malloc(sizeof(InputMachine));
     if (!machine) return NULL;
@@ -93,7 +93,6 @@ void iterate_buf(InputMachine* machine) {
             }
         }
 
-
         machine->waiting_key = key;
         machine->afl_buf_pos += 3;
     }
@@ -109,8 +108,8 @@ void iterate_buf(InputMachine* machine) {
     API用関数
 */
 
-void TS_new_test(Tassan* handle, size_t buf_size, char* buf) {
-    if (handle) TS_free(handle);
+void TS_new_test(Tassan** handle, size_t buf_size, char* buf) {
+    if (handle && *handle) TS_free(*handle);
     InputMachine* machine = NULL;
     machine=create_instance();
     
@@ -122,7 +121,7 @@ void TS_new_test(Tassan* handle, size_t buf_size, char* buf) {
     // 最初の Sleep Time を読み込む
     iterate_buf(machine);
 
-    handle = (Tassan*)machine;
+    *handle = (Tassan*)machine;
 }
 
 void TS_update(Tassan* handle, unsigned short int delta_time) {

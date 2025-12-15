@@ -1,11 +1,13 @@
 # TASSAN向け変数
 
+TFLAGS := 
+
 # テストケース1つの最大実行時間(ms)．
 # 待機時間がunsigned short intで定義されるため，65335msを超す場合別途改変が必要
-maxTestTime := 65335
+# maxTestTime := 65335
 
 
-TFLAGS += $(maxTestTime)
+# TFLAGS += $(maxTestTime)
 
 CC := clang
 CFLAGS := -O2 -g -fPIC 

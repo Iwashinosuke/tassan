@@ -1,0 +1,1 @@
+TS_pollkeyinput_onebyone()とTS_getch()の同時使用は非推奨(予期しない挙動を起こす可能性)

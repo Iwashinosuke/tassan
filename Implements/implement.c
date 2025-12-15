@@ -1,5 +1,7 @@
-// version 251126
+// version 251211
 /*
+    Author: S.Iwatsubo
+
     Module for mounting to games
     Override the game input like getch() or SDL_PollEvent()
 
@@ -8,8 +10,8 @@
     * Sleep Time(unsigned short int, N ms)
     
     Input Format:
-    [Sleep Time(first)][Input Key][Sleep Time][Input Key]...[Input Key][Sleep Time(last)]
-    */
+    [Input Key][Sleep Time][Input Key][Sleep Time]...[Input Key][Sleep Time(last)]
+*/
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -27,8 +29,6 @@ typedef struct {
     size_t key_count;
     InputKey* keys;
     short int sleep_time;
-    char waiting_key;
-    char last_key;
     size_t afl_buf_size;
     size_t afl_buf_pos;
     char* afl_buf;
@@ -58,8 +58,6 @@ InputMachine* create_instance() {
         machine->keys[i] = (InputKey){ .key = TS_KEYS[i], .is_pressed = false };
     }
     machine->sleep_time = 0;
-    machine->waiting_key = 0;
-    machine->last_key = 0;
     machine->afl_buf_size = 0;
     machine->afl_buf = NULL;
     machine->afl_buf_pos = 0;
@@ -82,18 +80,13 @@ void iterate_buf(InputMachine* machine) {
         machine->sleep_time = (short int)st;
 
         // 対応するキーの状態を更新
-        if (key != 0){
-            for (size_t i = 0; i < machine->key_count; i++) {
-                InputKey *k = &machine->keys[i];
-                if (k->key == key) {
-                    k->is_pressed = !k->is_pressed;
-                    machine->last_key = k->is_pressed ? k->key : 0;
-                    break;
-                }
+        if (key != (char)255) { // 255 は無操作
+            if((size_t)key < machine->key_count){
+                InputKey *k = &machine->keys[(size_t)key];
+                k->is_pressed = !k->is_pressed;
             }
         }
 
-        machine->waiting_key = key;
         machine->afl_buf_pos += 3;
     }
 
@@ -104,10 +97,10 @@ void iterate_buf(InputMachine* machine) {
     }
 }
 
+
 /*
     API用関数
 */
-
 void TS_new_test(Tassan** handle, size_t buf_size, char* buf) {
     if (handle && *handle) TS_free(*handle);
     InputMachine* machine = NULL;
@@ -143,7 +136,16 @@ char TS_getch(Tassan* handle) {
     InputMachine* machine = (InputMachine*)handle;
     
     if (machine->test_state) {
-        return machine->last_key;
+        char ch=0;
+        int is_pressed=0;
+        for (size_t i = 0; i < machine->key_count; i++)
+        {
+            TS_pollkeyinput_onebyone(handle, &ch, &is_pressed);
+            if (is_pressed) {
+                return ch;
+            }
+        }
+        
     }
     return 0;
 }

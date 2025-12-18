@@ -14,12 +14,12 @@ int main(void) {
     srand((unsigned int)time(NULL));
 
     for (size_t i = 0; i < count; ++i) {
-        entries[i].c = (char)(TS_KEYS[rand() % TS_KEYS_COUNT]);
+        entries[i].c = (char)(rand() % TS_KEYS_COUNT);
         entries[i].u = (unsigned short)(rand() % 65536);
     }
 
     // バイナリで書き込み
-    FILE *fp = fopen("example_bin", "wb");
+    FILE *fp = fopen("example", "wb");
     // // テキスト形式で書き込み(コメントアウト)
     // FILE *fp = fopen("example_txt", "w");
     
@@ -29,8 +29,8 @@ int main(void) {
     }
 
     for (size_t i = 0; i < count; ++i) {
-        // // csv形式で書き込む
-        fprintf(fp, "%c,%hu\n", entries[i].c, entries[i].u);
+        // csv形式で書き込む
+        // fprintf(fp, "%c,%hu", entries[i].c, entries[i].u);
         
 
         // バイナリ形式で書き込む

@@ -138,7 +138,7 @@ char TS_getch(Tassan* handle) {
     if (machine->test_state) {
         char ch=0;
         int is_pressed=0;
-        for (size_t i = 0; i < machine->key_count; i++)
+        for (size_t i = 0; i <= machine->key_count; i++)
         {
             TS_pollkeyinput_onebyone(handle, &ch, &is_pressed);
             if (is_pressed) {

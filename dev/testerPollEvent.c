@@ -49,18 +49,24 @@ int main(int argc, char** argv) {
     size_t frame_count = 0;
     while (TS_is_running(tassan)) {
         TS_update(tassan, 16); // Simulate a frame update with delta_time = 16ms
-        printf("Current Frame: %zu", frame_count);
+        printf("Current Frame: %zu keys: ", frame_count);
         char key;
-        unsigned short delay;
-        while (TS_pollkeyinput_onebyone(tassan, &key, &delay)) {
+        int is_pressed = -1;
+        int none_pressed = 1;
+        while (TS_pollkeyinput_onebyone(tassan, &key, &is_pressed)) {
+            none_pressed = 0;
             if (key != 0) {
-                printf(" Key pressed: %c", key);
-            } else {
-                printf(" No key pressed");
+                if(is_pressed) {
+                    printf("%c ", key);
+                }
             }
         }
+        if(none_pressed) {
+            printf("No key pressed ");
+        }
+        printf("\n");
 
-        frame_count++;
+        frame_count+=16;
     }
 
     printf("Test completed.\n");

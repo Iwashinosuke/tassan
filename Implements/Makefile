@@ -12,7 +12,11 @@ LIB_DIR = .
 # Source and object files
 SOURCES = $(wildcard $(SRC_DIR)/*.c)
 OBJECTS = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SOURCES))
-LIBRARY = $(LIB_DIR)/libtassan-imp.a
+ifeq ($(findstring -DDIRECT_READ_MODE,$(CFLAGS)),-DDIRECT_READ_MODE)
+	LIBRARY = $(LIB_DIR)/libtassan-imp-direct.a
+else
+	LIBRARY = $(LIB_DIR)/libtassan-imp.a
+endif
 
 # Targets
 all: $(LIBRARY)

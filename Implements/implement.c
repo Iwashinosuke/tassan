@@ -67,6 +67,25 @@ InputMachine* create_instance() {
 }
 
 void iterate_buf(InputMachine* machine) {
+    #ifdef DIRECT_READ_MODE /* 対照実験用 1フレームにつき1文字だけバフから読み込む */
+    if (machine->afl_buf_pos <= machine->afl_buf_size) {
+        char key = (char)machine->afl_buf_pos
+        
+        // 対応するキーの状態を更新
+        if (key != (char)255) { // 255 は無操作
+            if((size_t)key < machine->key_count){
+                InputKey *k = &machine->keys[(size_t)key];
+                k->is_pressed = !k->is_pressed;
+            }
+        }
+        
+        machine->afl_buf_pos++;
+    }
+    
+    if (machine->afl_buf_pos > machine->afl_buf_size) {
+        machine->state = false;
+    }
+    #else /* 通常のTassan処理 */
     // sleep_time が 0 以下 & まだ 3 バイト読めるあいだ処理を進める
     while (machine->sleep_time <= 0 &&
            machine->afl_buf_pos + 3 <= machine->afl_buf_size) {
@@ -95,6 +114,7 @@ void iterate_buf(InputMachine* machine) {
         machine->sleep_time <= 0) {
         machine->test_state = false;
     }
+    #endif
 }
 
 
@@ -160,6 +180,11 @@ int TS_pollkeyinput_onebyone(Tassan* handle, char* processing, int* is_pressed) 
         if (machine->current_key_index < machine->key_count) {
             *processing = machine->keys[machine->current_key_index].key;
             *is_pressed = machine->keys[machine->current_key_index++].is_pressed ? 1 : 0;
+            
+            #ifdef DIRECT_READ_MODE /* 対照実験用 1フレームにつき1文字だけバフから読み込む */
+            machine->keys[machine->current_key_index-1].is_pressed = 0;
+            #end
+            
             return 1;
         }
         else {

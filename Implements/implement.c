@@ -68,8 +68,11 @@ InputMachine* create_instance() {
 
 void iterate_buf(InputMachine* machine) {
     #ifdef DIRECT_READ_MODE /* 対照実験用 1フレームにつき1文字だけバフから読み込む */
-    if (machine->afl_buf_pos <= machine->afl_buf_size) {
-        char key = (char)machine->afl_buf_pos
+    if (machine->afl_buf_pos < machine->afl_buf_size) {
+        const unsigned char *buf =
+            (const unsigned char *)machine->afl_buf + machine->afl_buf_pos;
+
+        char key = (char)buf[0];
         
         // 対応するキーの状態を更新
         if (key != (char)255) { // 255 は無操作
@@ -82,8 +85,8 @@ void iterate_buf(InputMachine* machine) {
         machine->afl_buf_pos++;
     }
     
-    if (machine->afl_buf_pos > machine->afl_buf_size) {
-        machine->state = false;
+    if (machine->afl_buf_pos >= machine->afl_buf_size) {
+        machine->test_state = false;
     }
     #else /* 通常のTassan処理 */
     // sleep_time が 0 以下 & まだ 3 バイト読めるあいだ処理を進める
